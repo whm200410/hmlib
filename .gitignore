@@ -1,0 +1,14 @@
+/top_src
+*.obj
+*.pdb
+*.lib
+*.Release
+*.Debug
+*.dll
+*.exp
+*.dll
+*.dll
+*.ilk
+*.stash
+Makefile
+*.user
