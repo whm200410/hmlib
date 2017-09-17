@@ -1,0 +1,1 @@
+this folder is used to ease msg transfer to QT GUI thread, let GUI thread process msg stuff
