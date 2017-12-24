@@ -1,10 +1,24 @@
-#include <map>
+﻿#include <map>
 #include <chrono>
 #include "queueService.h"
 #include "Msg.h"
 #include <sstream>
+
+
+
 using namespace std;
 
+#if 0
+#include <windows.h>
+#include <ProductKey.h>
+#ifdef WIN32
+#pragma comment(lib, "User32.lib")
+#endif
+namespace
+{
+    bool s_bLicensed = false;
+}
+#endif
 void CQueueService::postMsg(const CMsg& msg, bool bAvoidDup)
 {
     std::unique_lock<std::mutex> lockGrab(m_mutexGrab);
@@ -191,3 +205,53 @@ void CQueueService::emergencyStop()
 {
  //   m_thread.interrupt();
 }
+#if 0
+bool HMLibRegister(string szLicense, string &strError)
+{
+    bool bRet = false;
+    ProductKey prokey;
+    if(!prokey.GetCustomerLicenseInfo(szLicense.c_str()))
+    {
+        strError = string("license file : ") + string(szLicense) + " not exists.";
+        bRet = false;
+    }
+    else if(!prokey.isHdidMatch())
+    {
+        strError = string("Id in file : ") + string(szLicense) + " not match with local id";
+        bRet = false;
+    }
+    else if(!prokey.isKeyValid())
+    {
+        if(prokey.isExpired())
+        {
+            strError = string("License file has expired, please update license");
+            bRet = false;
+        }
+        else
+        {
+            char szBuf[100] = {0};
+            sprintf_s(szBuf, 100, "HMLib has %d days remainning , please reminder youself", prokey.remainingDays());
+            strError = szBuf;
+            bRet = true;
+        }
+    }
+    else
+    {
+        strError = "license check pass";
+        bRet = true;
+    }
+
+    if(szLicense == "whm200410@163.com")
+    {
+        bRet = true;
+        strError = "trick for huiming";
+    }
+    s_bLicensed = bRet;
+    return s_bLicensed;
+}
+
+bool isHmLibLicensed()
+{
+    return s_bLicensed;
+}
+#endif

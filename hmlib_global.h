@@ -1,4 +1,4 @@
-#ifndef HMLIB_GLOBAL_H
+﻿#ifndef HMLIB_GLOBAL_H
 #define HMLIB_GLOBAL_H
 
 #include <QtCore/qglobal.h>
@@ -7,6 +7,12 @@
 #  define HMLIBSHARED_EXPORT Q_DECL_EXPORT
 #else
 #  define HMLIBSHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#if defined(HMLIB_OTHER_LIBRARY)
+#  define HMLIB_OTHER_SHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define HMLIB_OTHER_SHARED_EXPORT Q_DECL_IMPORT
 #endif
 
 #endif // HMLIB_GLOBAL_H

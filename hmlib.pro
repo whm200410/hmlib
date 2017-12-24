@@ -5,9 +5,16 @@
 #-------------------------------------------------
 
 QT      += gui core
-CONFIG  += debug_and_release build_all
+#CONFIG  += debug_and_release build_all
+#CONFIG += debug
 TEMPLATE = lib
 DESTDIR = ./bin
+
+contains(QT_ARCH, i386) {
+    DESTDIR = ./bin/x86
+} else {
+    DESTDIR = ./bin/x64
+}
 
 CONFIG(debug, debug|release) {
     message(for debug)
@@ -23,7 +30,7 @@ CONFIG(release, debug|release) {
     TARGET = hmlib
 }
 
-DEFINES += HMLIB_LIBRARY BOOST_ALL_DYN_LINK
+DEFINES += HMLIB_LIBRARY
 
 SOURCES += hmlib.cpp \
     src/msg/msg.cpp \
@@ -61,12 +68,15 @@ unix {
     target.path = /usr/lib
     INSTALLS += target
 }
-LIBS += -L$$(boost_lib)/lib32-msvc-12.0
 
-INCLUDEPATH += $$(boost_lib) \
+QMAKE_CXXFLAGS += /wd4251
+
+INCLUDEPATH += \
                 include/msg   \
                 include/utils \
                 include/service
 
 DISTFILES += \
     common.pri
+message(lib  :  $$LIBS)
+message(config: $$CONFIG)

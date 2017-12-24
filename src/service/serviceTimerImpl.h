@@ -1,4 +1,4 @@
-#ifndef _SERVICE_TIMER_IMPL_H
+﻿#ifndef _SERVICE_TIMER_IMPL_H
 #define _SERVICE_TIMER_H
 #include "msg.h"
 #include <set>
@@ -7,7 +7,7 @@
 #include <mutex>
 #include <chrono>
 #include <condition_variable>
-
+#include <memory>
 class CQueueService;
 class CMsg;
 struct tEvent_t
@@ -19,7 +19,18 @@ struct tEvent_t
     CMsg            m_msg;
     int             m_nCmd;
 };
-bool operator <(const tEvent_t &lhs, const tEvent_t &rhs);
+
+typedef std::shared_ptr<tEvent_t> ptrEvent_t;
+struct evtCompare {
+    bool operator()(const ptrEvent_t &evt1, const ptrEvent_t &evt2) const {
+        return evt1->m_tm < evt2->m_tm;
+    }
+};
+
+
+
+
+bool operator<(const ptrEvent_t &evt1, const ptrEvent_t &evt2);
 class CServiceTimerImpl
 {
 public:
@@ -36,8 +47,7 @@ protected:
 private:
 
     typedef std::condition_variable hmcondition;
-    typedef std::multiset<tEvent_t> timeEvents_t;
-    std::multiset<tEvent_t> m_evs;
+    std::multiset<ptrEvent_t, evtCompare> m_evs;
     std::mutex              m_mutex;
     hmcondition             m_cond;
     std::thread             m_tid;

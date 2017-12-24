@@ -1,9 +1,8 @@
 #include "Worker.h"
 #include "WorkerImpl.h"
 #include "QueueService.h"
-
+#include <algorithm>
 #include "Msg.h"
-using namespace std;
 using namespace std;
 
 CWorkerImpl::task_t::task_t()

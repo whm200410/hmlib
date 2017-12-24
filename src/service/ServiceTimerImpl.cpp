@@ -1,7 +1,8 @@
-#include "ServiceTimerImpl.h"
+﻿#include "ServiceTimerImpl.h"
 #include "QueueService.h"
 #include <chrono>
-
+#include <vector>
+using namespace std;
 tEvent_t::tEvent_t(int mSec, CQueueService *pSer, const CMsg &msg)
     :m_pSer(pSer), m_msg(msg), m_nCmd(msg.getCmd())
 {
@@ -15,8 +16,8 @@ void CServiceTimerImpl::insert(int msec, CQueueService* pSer, const CMsg &msg)
 {
     std::lock_guard<std::mutex> gd(m_mutex);
     if(m_bExit) return;
-    tEvent_t tev(msec, pSer, msg);
-    m_evs.insert(tev);
+    ptrEvent_t pevt(new tEvent_t(msec, pSer, msg));
+    m_evs.insert(pevt);
     m_cond.notify_one();
 }
 void CServiceTimerImpl::erase(CQueueService* pSer, const CMsg *pMsg)
@@ -24,37 +25,21 @@ void CServiceTimerImpl::erase(CQueueService* pSer, const CMsg *pMsg)
     std::lock_guard<std::mutex> gd(m_mutex);
     const bool                  bCanelAll = pMsg == 0;
     const int                   nCmd = pMsg == 0 ? 0 : pMsg->getCmd();
+    vector<ptrEvent_t>          vEra;
 
-    std::list<const tEvent_t*> evts;
-    typedef std::multiset<tEvent_t>::iterator eIt_t;
-
-    //we can replace the remove by lambda or remove_if
-    for (eIt_t it = m_evs.begin(); it != m_evs.end(); ++it)
+    //find out all needs to be remove
+    for(auto &v : m_evs)
     {
-        const tEvent_t &ev = *it;
-        if (it->m_pSer == pSer && (bCanelAll || it->m_nCmd == nCmd))
-        {
-            evts.push_back(&ev);
-        }
+        if(v->m_pSer == pSer && (bCanelAll || v->m_nCmd == nCmd)) vEra.push_back(v);
     }
 
-    size_t nPreSz = m_evs.size();
-    while (!evts.empty())
+    //remove all
+    for(auto &v : vEra)
     {
-        const tEvent_t *pEv = evts.front();
-        for (eIt_t it = m_evs.begin(); it != m_evs.end(); ++it)
-        {
-            const tEvent_t &ev = *it;
-            if (&ev == pEv)
-            {
-                m_evs.erase(it);
-                break;
-            }
-        }
+        m_evs.erase(v);
     }
-    size_t nNowSz = m_evs.size();
 
-    if (nNowSz != nPreSz) m_cond.notify_one();
+    m_cond.notify_one();
 }
 
 CServiceTimerImpl::CServiceTimerImpl()
@@ -95,7 +80,7 @@ void    CServiceTimerImpl::doNext()
     std::unique_lock<std::mutex>          gd(m_mutex);
 
     auto tNow = std::chrono::high_resolution_clock::now();
-    while (m_evs.empty() || tNow < m_evs.begin()->m_tm)
+    while (m_evs.empty() || tNow < (*m_evs.begin())->m_tm)
     {
         if (m_evs.empty())
         {
@@ -103,16 +88,16 @@ void    CServiceTimerImpl::doNext()
         }
         else
         {
-            m_cond.wait_for(gd, (m_evs.begin()->m_tm - tNow));
+            m_cond.wait_for(gd, ( (*m_evs.begin())->m_tm - tNow));
         }
         if (m_bExit) return;
         tNow = std::chrono::high_resolution_clock::now();
     }
     if (m_bExit) return;
 
-    std::multiset<tEvent_t>::iterator itFirst = m_evs.begin();
-    itFirst->m_pSer->postMsg(itFirst->m_msg);
-    m_evs.erase(itFirst);  
+    ptrEvent_t pEvt = *m_evs.begin();
+    pEvt->m_pSer->postMsg(pEvt->m_msg);
+    m_evs.erase(pEvt);
 }
 /*actual job process function*/
 
@@ -124,3 +109,4 @@ void    CServiceTimerImpl::threadFunc(void)
         doNext();
     }
 }
+
