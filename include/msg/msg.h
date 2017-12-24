@@ -62,10 +62,9 @@ public:
     static const int cEvtIdIdx      = 0x981235;
 private:
 	void    checkValidMsg();
-    typedef std::shared_ptr<CMsgImgl>    msgImplPtr_t;
 private:
 	int             m_ncmd;
-	msgImplPtr_t    pmsg;
+	std::shared_ptr<CMsgImgl>    pmsg;
 };
 
 #endif

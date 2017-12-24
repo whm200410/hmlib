@@ -1,4 +1,4 @@
-//*****************************************************************************
+﻿//*****************************************************************************
 // Name       : serviceTimer.h
 // Description: Time is used to insert in event or job to a CQueueService at some future time,
 //              when that time meets, the task will be excuate in CQueueService's over loop
@@ -19,13 +19,11 @@ class CMsg;
 class HMLIBSHARED_EXPORT CServiceTimer
 {
 public:
+    CServiceTimer();
+    virtual ~CServiceTimer();
     void stop();
     void insert(int msec, CQueueService*, const CMsg &msg);
     void erase(CQueueService*, const CMsg *pMsg = 0);
-    static CServiceTimer& inst();
-protected:
-    CServiceTimer();
-    virtual ~CServiceTimer();
 private:   
     std::unique_ptr<CServiceTimerImpl> m_impl;
 };

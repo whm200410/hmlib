@@ -12,7 +12,6 @@ using std::list;
 typedef std::condition_variable hmcondition;
 
 class CMsg;
-
 class  HMLIBSHARED_EXPORT CQueueService
 {
 public:
